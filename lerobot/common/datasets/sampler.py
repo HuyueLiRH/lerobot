@@ -16,6 +16,8 @@
 from typing import Iterator, Union
 
 import torch
+import numpy as np
+from torch.utils.data import Sampler
 
 
 class EpisodeAwareSampler:
@@ -59,3 +61,50 @@ class EpisodeAwareSampler:
 
     def __len__(self) -> int:
         return len(self.indices)
+    
+
+
+class ProportionalBatchSampler(Sampler):
+    def __init__(self, episode_data_index, batch_size, my_episode_max=50, my_fraction=0.5):
+        """
+        episode_data_index: dict with 'from', 'to' keys listing per-episode frame ranges
+        batch_size: int, total batch size
+        my_episode_max: int, episodes [0, my_episode_max) are "my task"
+        my_fraction: float, fraction of each batch from "my task"
+        """
+        # Create lists of indices per group
+        self.my_indices = []
+        self.other_indices = []
+        for episode_idx, (start, end) in enumerate(
+            zip(episode_data_index["from"], episode_data_index["to"], strict=True)
+        ):
+            indices = list(range(start.item(), end.item()))
+            if episode_idx < my_episode_max:
+                self.my_indices.extend(indices)
+            else:
+                self.other_indices.extend(indices)
+        self.batch_size = batch_size
+        self.my_batch_size = int(batch_size * my_fraction)
+        self.other_batch_size = batch_size - self.my_batch_size
+
+    def __iter__(self):
+        # Shuffle at epoch start
+        my_idx = np.random.permutation(self.my_indices)
+        other_idx = np.random.permutation(self.other_indices)
+        my_ptr = 0
+        other_ptr = 0
+
+        while my_ptr + self.my_batch_size <= len(my_idx) and other_ptr + self.other_batch_size <= len(other_idx):
+            my_batch = my_idx[my_ptr:my_ptr + self.my_batch_size]
+            other_batch = other_idx[other_ptr:other_ptr + self.other_batch_size]
+            batch = np.concatenate([my_batch, other_batch])
+            np.random.shuffle(batch)
+            yield batch.tolist()
+            my_ptr += self.my_batch_size
+            other_ptr += self.other_batch_size
+
+    def __len__(self):
+        return min(
+            len(self.my_indices) // self.my_batch_size,
+            len(self.other_indices) // self.other_batch_size
+        )
