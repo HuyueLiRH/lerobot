@@ -1,0 +1,67 @@
+python lerobot/scripts/train.py \
+  --dataset.repo_id=Qipei/Task_Pickup6 \
+  --policy.type=act \
+  --output_dir=outputs/train/act_task_pickup_test3 \
+  --job_name=act_task_pickup_test3 \
+  --policy.device=cuda \
+  --wandb.enable=false \
+  --save_freq=20000
+  --steps = 200000
+  
+  python lerobot/scripts/train.py \
+  --dataset.repo_id=Qipei/Task_Pickup  --policy.type=act  --output_dir=outputs/train/act_task_pickup8  --job_name=act_task_pickup8 --policy.device=cuda  --wandb.enable=false  --save_freq=100
+  
+  python lerobot/scripts/control_robot.py \
+  --robot.type=trossen_ai_mobile \
+  --control.type=record \
+  --control.fps=30 \
+  --control.single_task="Recording evaluation episode using Trossen AI Mobile." \
+  --control.repo_id=Qipei/eval_act_task_pickup_test19 \
+  --control.tags='["tutorial"]' \
+  --control.warmup_time_s=5 \
+  --control.episode_time_s=15 \
+  --control.reset_time_s=10 \
+  --control.num_episodes=5 \
+  --control.push_to_hub=true \
+  --control.policy.path=outputs/train/act_task_pickup_test3/checkpoints/last/pretrained_model \
+  --control.num_image_writer_processes=1 \
+  --robot.enable_motor_torque=true
+
+  python lerobot/scripts/control_robot.py \
+  --robot.type=trossen_ai_mobile \
+  --control.type=record \
+  --control.fps=30 \
+  --control.single_task="Recording evaluation episode using Trossen AI Mobile." \
+  --control.repo_id=Qipei/eval_act_task_pickup_test34 \
+  --control.tags='["tutorial"]' \
+  --control.warmup_time_s=5 \
+  --control.episode_time_s=15 \
+  --control.reset_time_s=10 \
+  --control.num_episodes=5 \
+  --control.push_to_hub=true \
+  --control.policy.path=outputs/train/act_task_pickup_test4/checkpoints/last/pretrained_model \
+  --control.num_image_writer_processes=1 \
+  --robot.enable_motor_torque=true
+  
+  
+  ---------------------------------------------------------------------------------
+  record
+  
+  python lerobot/scripts/train.py \
+  --dataset.repo_id=Qipei/Task_Pickup8 \
+  --policy.type=act \
+  --output_dir=outputs/train/act_task_pickup_test4 \
+  --job_name=act_task_pickup_test4 \
+  --policy.device=cuda \
+  --save_freq=20000
+  --steps = 200000
+  
+  
+  
+  Interrupted by powering issue, resume from step 80000(with a copied output folder)
+  
+  python lerobot/scripts/train.py \
+  --config_path=outputs/train/act_task_pickup_test4/checkpoints/080000/pretrained_model/train_config.json \
+  --resume=true
+  
+
